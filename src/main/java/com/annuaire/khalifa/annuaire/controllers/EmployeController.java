@@ -8,11 +8,18 @@ import com.annuaire.khalifa.annuaire.models.Employe;
 import com.annuaire.khalifa.annuaire.services.EmailService;
 import com.annuaire.khalifa.annuaire.services.EmployeService;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -147,7 +154,6 @@ public ResponseEntity<Void> deleteEmploye(@PathVariable int id) {
         }
     }
 
-
     @PatchMapping("/{id}")
     public ResponseEntity<Employe> changeRole(@PathVariable int id) {
         return employeService.findById(id)
@@ -165,23 +171,49 @@ public ResponseEntity<Void> deleteEmploye(@PathVariable int id) {
 
                         emailService.sendSimpleEmail(to, subject, body);
                     }
-
                     return ResponseEntity.ok(updated);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-    
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
+        String username = loginRequest.get("username");
+        String password = loginRequest.get("password");
+
+        String tokenUrl = "https://refonte.seneau.sn/realms/auth2-dev/protocol/openid-connect/token";
+
+        // ⚡ Corps de la requête en x-www-form-urlencoded
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("client_id", "seneau"); // ton client_id
+        formData.add("client_secret", "eLDu7SfmCjSGlI7YOFXp7xZtgJi73mhF"); // ton secret
+        formData.add("grant_type", "password");
+        formData.add("username", username);
+        formData.add("password", password);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        try {
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
+            return ResponseEntity.ok(response.getBody()); // renvoie directement le token JSON
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("error", "Login failed", "details", e.getMessage()));
+        }
+    }
+
+
     @PostMapping("/logout")
     public void logout(HttpServletResponse response, @RequestHeader("Authorization") String authHeader) throws IOException {
         // Supprime le token côté serveur (facultatif si JWT)
 
         // Redirige vers Keycloak pour terminer la session
-        String logoutUrl = "http://localhost:8180/realms/annuaire/protocol/openid-connect/logout?redirect_uri=http://localhost:4200";
+        String logoutUrl = "https://refonte.seneau.sn/realms/auth2-dev/protocol/openid-connect/logout?redirect_uri=http://localhost:4200";
         response.sendRedirect(logoutUrl);
     }
-
-
-
-
 
 }
