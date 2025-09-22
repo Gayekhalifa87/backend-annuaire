@@ -175,36 +175,36 @@ public ResponseEntity<Void> deleteEmploye(@PathVariable int id) {
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
-        String username = loginRequest.get("username");
-        String password = loginRequest.get("password");
-
-        String tokenUrl = "https://refonte.seneau.sn/realms/auth2-dev/protocol/openid-connect/token";
-
-        // ⚡ Corps de la requête en x-www-form-urlencoded
-        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-        formData.add("client_id", "seneau"); // ton client_id
-        formData.add("client_secret", "eLDu7SfmCjSGlI7YOFXp7xZtgJi73mhF"); // ton secret
-        formData.add("grant_type", "password");
-        formData.add("username", username);
-        formData.add("password", password);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
-
-        RestTemplate restTemplate = new RestTemplate();
-
-        try {
-
-            ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
-            return ResponseEntity.ok(response.getBody()); // renvoie directement le token JSON
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body(Map.of("error", "Login failed", "details", e.getMessage()));
-        }
-    }
+//    @PostMapping("/login")
+//    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
+//        String username = loginRequest.get("username");
+//        String password = loginRequest.get("password");
+//
+//        String tokenUrl = "https://refonte.seneau.sn/realms/auth2-dev/protocol/openid-connect/token";
+//
+//        // ⚡ Corps de la requête en x-www-form-urlencoded
+//        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+//        formData.add("client_id", "seneau"); // ton client_id
+//        formData.add("client_secret", "eLDu7SfmCjSGlI7YOFXp7xZtgJi73mhF"); // ton secret
+//        formData.add("grant_type", "password");
+//        formData.add("username", username);
+//        formData.add("password", password);
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+//
+//        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
+//
+//        RestTemplate restTemplate = new RestTemplate();
+//
+//        try {
+//
+//            ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
+//            return ResponseEntity.ok(response.getBody()); // renvoie directement le token JSON
+//        } catch (Exception e) {
+//            return ResponseEntity.status(401).body(Map.of("error", "Login failed", "details", e.getMessage()));
+//        }
+//    }
 
 
     @PostMapping("/logout")
