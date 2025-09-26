@@ -42,6 +42,17 @@ public class EmployeController {
         return externalApiMockService.getExternalEmploye(externalId);
     }
 
+    @GetMapping("/test-real-api/{externalId}")
+    public ResponseEntity<ExternalEmployeDTO> testRealApi(@PathVariable Integer externalId) {
+        ExternalEmployeDTO dto = externalApiMockService.getExternalEmploye(externalId);
+        if (dto != null) {
+            return ResponseEntity.ok(dto);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+
+
     //POUR COMBINER LES DEUX BASES DE DONNEES
     @GetMapping("/combined/{id}")
     public ResponseEntity<CombinedEmployeDTO> getCombinedEmploye(@PathVariable int id) {
@@ -69,35 +80,40 @@ public class EmployeController {
         return employeService.getTotalEmployes();
     }
 
-@GetMapping("/search")
-public ResponseEntity<CombinedEmployeDTO> searchCombinedByIp(@RequestParam int ip) {
-    // Cherche dans la base interne
-    Optional<Employe> internalOpt = employeService.findByIp(ip);
+    @GetMapping("/search")
+    public ResponseEntity<CombinedEmployeDTO> searchCombinedByIp(@RequestParam int ip) {
+        // Cherche dans la base interne
+        Optional<Employe> internalOpt = employeService.findByIp(ip);
 
-    if (internalOpt.isEmpty()) {
-        return ResponseEntity.notFound().build();
+        if (internalOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // On récupère l'employé interne
+        Employe internal = internalOpt.get();
+
+        // Récupère les infos de la base externe (maintenant via la vraie API)
+        ExternalEmployeDTO external = externalApiMockService.getExternalEmploye(internal.getEmployeId());
+
+        if (external == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Combine les deux en DTO
+        CombinedEmployeDTO combined = new CombinedEmployeDTO();
+        combined.setId(internal.getId());
+        combined.setNom(external.getNom());
+        combined.setPrenom(external.getPrenom());
+        combined.setEmail(external.getEmail()); // ← AJOUTER CETTE LIGNE
+        combined.setIp(internal.getIp());
+        combined.setTelephone(internal.getTelephone());
+        combined.setRole(internal.getRole());
+        combined.setPoste(external.getPoste());
+        combined.setDirection(external.getDirection());
+        combined.setService(external.getService());
+
+        return ResponseEntity.ok(combined);
     }
-
-    // On récupère l'employé interne
-    Employe internal = internalOpt.get();
-
-    // Récupère les infos de la base externe via le mock
-    ExternalEmployeDTO external = externalApiMockService.getExternalEmploye(internal.getEmployeId());
-
-    // Combine les deux en DTO
-    CombinedEmployeDTO combined = new CombinedEmployeDTO();
-    combined.setId(internal.getId());
-    combined.setNom(external.getNom());
-    combined.setPrenom(external.getPrenom());
-    combined.setIp(internal.getIp());
-    combined.setTelephone(internal.getTelephone());
-    combined.setRole(internal.getRole());
-    combined.setPoste(external.getPoste());
-    combined.setDirection(external.getDirection());
-    combined.setService(external.getService());
-
-    return ResponseEntity.ok(combined);
-}
 
 //LA SUPPRESSION
 @DeleteMapping("/{id}")
@@ -113,9 +129,7 @@ public ResponseEntity<Void> deleteEmploye(@PathVariable int id) {
 
 
     @GetMapping("/{id}")
-    //@PathVariable int id → récupère la valeur de {id} de l’URL et la passe à ta méthode
-    public Optional<Employe> findById(@RequestBody @PathVariable int id) {
-
+    public Optional<Employe> findById(@PathVariable int id) {
         return employeService.findById(id);
     }
 
@@ -175,37 +189,6 @@ public ResponseEntity<Void> deleteEmploye(@PathVariable int id) {
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-//    @PostMapping("/login")
-//    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
-//        String username = loginRequest.get("username");
-//        String password = loginRequest.get("password");
-//
-//        String tokenUrl = "https://refonte.seneau.sn/realms/auth2-dev/protocol/openid-connect/token";
-//
-//        // ⚡ Corps de la requête en x-www-form-urlencoded
-//        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-//        formData.add("client_id", "seneau"); // ton client_id
-//        formData.add("client_secret", "eLDu7SfmCjSGlI7YOFXp7xZtgJi73mhF"); // ton secret
-//        formData.add("grant_type", "password");
-//        formData.add("username", username);
-//        formData.add("password", password);
-//
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-//
-//        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
-//
-//        RestTemplate restTemplate = new RestTemplate();
-//
-//        try {
-//
-//            ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
-//            return ResponseEntity.ok(response.getBody()); // renvoie directement le token JSON
-//        } catch (Exception e) {
-//            return ResponseEntity.status(401).body(Map.of("error", "Login failed", "details", e.getMessage()));
-//        }
-//    }
-
 
     @PostMapping("/logout")
     public void logout(HttpServletResponse response, @RequestHeader("Authorization") String authHeader) throws IOException {
