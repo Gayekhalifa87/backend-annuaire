@@ -44,11 +44,41 @@ public class EmployeService {
 
         return employeRepository.findByTelephone(telephone);
     }
+
     //Creation d un nouvel employe
+//    public Employe createEmploye(Employe employe) {
+//        employe.setPassword(passwordEncoder.encode(employe.getPassword()));
+//        return employeRepository.save(employe);
+//    }
+
     public Employe createEmploye(Employe employe) {
+        // Vérifier si cet agent externe est déjà assigné
+        if (employe.getEmployeId() != null && employeRepository.existsByEmployeId(employe.getEmployeId())) {
+            throw new IllegalArgumentException("Cet agent a déjà été assigné dans l'annuaire local.");
+        }
+
+        // Vérifier si l'IP est déjà utilisée par UN AUTRE employé
+        if (employe.getIp() != null) {
+            employeRepository.findByIp(employe.getIp()).ifPresent(existing -> {
+                if (!existing.getEmployeId().equals(employe.getEmployeId())) {
+                    throw new IllegalArgumentException("Cette IP est déjà attribuée à un autre employé.");
+                }
+            });
+        }
+
+        // Vérifier si le téléphone est déjà utilisé par UN AUTRE employé
+        if (employe.getTelephone() != null && !employe.getTelephone().isEmpty()) {
+            employeRepository.findByTelephone(employe.getTelephone()).ifPresent(existing -> {
+                if (!existing.getEmployeId().equals(employe.getEmployeId())) {
+                    throw new IllegalArgumentException("Ce numéro de téléphone est déjà attribué à un autre employé.");
+                }
+            });
+        }
+
         employe.setPassword(passwordEncoder.encode(employe.getPassword()));
         return employeRepository.save(employe);
     }
+
     // Suppression d’un employé
     public boolean deleteEmploye(int id) {
         return employeRepository.findById(id)

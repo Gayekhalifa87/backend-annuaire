@@ -117,27 +117,78 @@ public ResponseEntity<Void> deleteEmploye(@PathVariable int id) {
         return employeService.findById(id);
     }
 
-    @PostMapping
-    //Creation d un nouvel employe
-    public Employe createEmploye(@RequestBody Employe employe) {
-        return employeService.createEmploye(employe);
+//    @PostMapping
+//    //Creation d un nouvel employe
+//    public Employe createEmploye(@RequestBody Employe employe) {
+//        return employeService.createEmploye(employe);
+//    }
+@PostMapping
+public ResponseEntity<?> createEmploye(@RequestBody Employe employe) {
+    try {
+        Employe saved = employeService.createEmploye(employe);
+        return ResponseEntity.ok(saved);
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
     }
+}
 
+
+
+//    @PutMapping("/{id}")
+//    public ResponseEntity<Employe> updateEmploye(
+//            @PathVariable int id,
+//            @RequestBody Employe updatedEmploye) {
+//
+//        try {
+//            Employe existing = employeService.findById(id)
+//                    .orElseThrow(() -> new RuntimeException("Employé non trouvé"));
+//
+//            // Met à jour même si c'est null (pour supprimer)
+//            existing.setIp(updatedEmploye.getIp());
+//            existing.setTelephone(updatedEmploye.getTelephone());
+//
+//            if (updatedEmploye.getPassword() != null) {
+//                existing.setPassword(employeService.encodePassword(updatedEmploye.getPassword()));
+//            }
+//
+//            Employe saved = employeService.save(existing);
+//            return ResponseEntity.ok(saved);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseEntity.status(500).build();
+//        }
+//    }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Employe> updateEmploye(
+    public ResponseEntity<?> updateEmploye(
             @PathVariable int id,
             @RequestBody Employe updatedEmploye) {
-
         try {
             Employe existing = employeService.findById(id)
                     .orElseThrow(() -> new RuntimeException("Employé non trouvé"));
 
-            // Met à jour même si c'est null (pour supprimer)
-            existing.setIp(updatedEmploye.getIp());
-            existing.setTelephone(updatedEmploye.getTelephone());
+            // Vérifier si la nouvelle IP est déjà utilisée par UN AUTRE employé
+            if (updatedEmploye.getIp() != null) {
+                Optional<Employe> ipOwner = employeService.findByIp(updatedEmploye.getIp());
+                if (ipOwner.isPresent() && ipOwner.get().getId() != id) {
+                    return ResponseEntity.badRequest()
+                            .body(Map.of("message", "Cette IP est déjà attribuée à un autre employé."));
+                }
+                existing.setIp(updatedEmploye.getIp());
+            }
 
-            if (updatedEmploye.getPassword() != null) {
+            // Vérifier si le nouveau téléphone est déjà utilisé par UN AUTRE employé
+            if (updatedEmploye.getTelephone() != null) {
+                Optional<Employe> phoneOwner = employeService.findByTelephone(updatedEmploye.getTelephone());
+                if (phoneOwner.isPresent() && phoneOwner.get().getId() != id) {
+                    return ResponseEntity.badRequest()
+                            .body(Map.of("message", "Ce téléphone est déjà attribué à un autre employé."));
+                }
+                existing.setTelephone(updatedEmploye.getTelephone());
+            }
+
+            // Mise à jour du mot de passe si fourni
+            if (updatedEmploye.getPassword() != null && !updatedEmploye.getPassword().isEmpty()) {
                 existing.setPassword(employeService.encodePassword(updatedEmploye.getPassword()));
             }
 
@@ -145,9 +196,10 @@ public ResponseEntity<Void> deleteEmploye(@PathVariable int id) {
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).build();
+            return ResponseEntity.status(500).body(Map.of("message", "Erreur serveur"));
         }
     }
+
 
     @PatchMapping("/{id}")
     public ResponseEntity<Employe> changeRole(@PathVariable int id) {
