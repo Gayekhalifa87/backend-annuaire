@@ -14,6 +14,7 @@ public class CombinedEmployeDTO {
 
     // Infos externes
     private String nom;
+    private String matricule;
     private String prenom;
     private String email;
     private String direction;

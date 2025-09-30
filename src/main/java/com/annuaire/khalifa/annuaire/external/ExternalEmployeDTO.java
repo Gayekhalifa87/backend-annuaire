@@ -9,6 +9,7 @@ public class ExternalEmployeDTO {
     private int id;
     private String nom;
     private String prenom;
+    private String matricule;
     private String email;
     private String direction;
     private String service;

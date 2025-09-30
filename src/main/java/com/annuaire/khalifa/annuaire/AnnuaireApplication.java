@@ -12,5 +12,4 @@ public class AnnuaireApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(AnnuaireApplication.class, args);
 	}
-
 }

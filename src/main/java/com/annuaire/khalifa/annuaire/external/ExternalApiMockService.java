@@ -4,6 +4,7 @@ package com.annuaire.khalifa.annuaire.external;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 @Service
 @RequiredArgsConstructor
@@ -21,19 +22,8 @@ public class ExternalApiMockService {
             System.err.println("Erreur API externe pour l'agent " + externalId + ": " + e.getMessage());
 
             // Option 1 : Retourner null
-//            return null;
+            return null;
 
-            // Option 2 : Retourner un mock (décommentez si vous préférez)
-
-            ExternalEmployeDTO dto = new ExternalEmployeDTO();
-            dto.setId(externalId);
-            dto.setNom("Sarr" + externalId);
-            dto.setPrenom("Aliou" + externalId);
-            dto.setEmail("gayekhalifa" + externalId + "@gmail.com");
-            dto.setDirection("DSI");
-            dto.setService("Developpement");
-            dto.setPoste("Developpeur");
-            return dto;
 
         }
     }
@@ -44,6 +34,7 @@ public class ExternalApiMockService {
 
         ExternalEmployeDTO dto = new ExternalEmployeDTO();
         dto.setId(agent.getId().intValue());
+
 
         // Séparer le fullName en nom et prénom
         if (agent.getFullName() != null && !agent.getFullName().trim().isEmpty()) {

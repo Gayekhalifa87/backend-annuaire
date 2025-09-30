@@ -36,22 +36,6 @@ public class EmployeController {
         this.emailService = emailService;
         this.externalApiMockService = externalApiMockService;
     }
-    //TESTONS LE MOCK
-    @GetMapping("/test-mock/{externalId}")
-    public ExternalEmployeDTO testExternalMock(@PathVariable Integer externalId) {
-        return externalApiMockService.getExternalEmploye(externalId);
-    }
-
-    @GetMapping("/test-real-api/{externalId}")
-    public ResponseEntity<ExternalEmployeDTO> testRealApi(@PathVariable Integer externalId) {
-        ExternalEmployeDTO dto = externalApiMockService.getExternalEmploye(externalId);
-        if (dto != null) {
-            return ResponseEntity.ok(dto);
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-
 
     //POUR COMBINER LES DEUX BASES DE DONNEES
     @GetMapping("/combined/{id}")
@@ -104,7 +88,8 @@ public class EmployeController {
         combined.setId(internal.getId());
         combined.setNom(external.getNom());
         combined.setPrenom(external.getPrenom());
-        combined.setEmail(external.getEmail()); // ← AJOUTER CETTE LIGNE
+        combined.setMatricule(external.getMatricule());
+        combined.setEmail(external.getEmail());
         combined.setIp(internal.getIp());
         combined.setTelephone(internal.getTelephone());
         combined.setRole(internal.getRole());
@@ -127,7 +112,6 @@ public ResponseEntity<Void> deleteEmploye(@PathVariable int id) {
 }
 
 
-
     @GetMapping("/{id}")
     public Optional<Employe> findById(@PathVariable int id) {
         return employeService.findById(id);
@@ -139,6 +123,7 @@ public ResponseEntity<Void> deleteEmploye(@PathVariable int id) {
         return employeService.createEmploye(employe);
     }
 
+
     @PutMapping("/{id}")
     public ResponseEntity<Employe> updateEmploye(
             @PathVariable int id,
@@ -148,13 +133,9 @@ public ResponseEntity<Void> deleteEmploye(@PathVariable int id) {
             Employe existing = employeService.findById(id)
                     .orElseThrow(() -> new RuntimeException("Employé non trouvé"));
 
-            if (updatedEmploye.getIp() != null) {
-                existing.setIp(updatedEmploye.getIp());
-            }
-
-            if (updatedEmploye.getTelephone() != null) {
-                existing.setTelephone(updatedEmploye.getTelephone());
-            }
+            // Met à jour même si c'est null (pour supprimer)
+            existing.setIp(updatedEmploye.getIp());
+            existing.setTelephone(updatedEmploye.getTelephone());
 
             if (updatedEmploye.getPassword() != null) {
                 existing.setPassword(employeService.encodePassword(updatedEmploye.getPassword()));
