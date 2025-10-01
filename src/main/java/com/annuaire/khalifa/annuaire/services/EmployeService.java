@@ -169,6 +169,7 @@ public class EmployeService {
                         var external = externalApiMockService.getExternalEmploye(employe.getEmployeId());
                         dto.setNom(external.getNom());
                         dto.setPrenom(external.getPrenom());
+                        dto.setMatricule(external.getMatricule());
                         dto.setEmail(external.getEmail());
                         dto.setDirection(external.getDirection());
                         dto.setService(external.getService());
@@ -179,7 +180,6 @@ public class EmployeService {
                 })
                 .collect(Collectors.toList());
     }
-
 
 
     // Recherche via le mock
