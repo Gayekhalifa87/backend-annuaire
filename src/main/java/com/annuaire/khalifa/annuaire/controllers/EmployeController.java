@@ -133,32 +133,6 @@ public ResponseEntity<?> createEmploye(@RequestBody Employe employe) {
 }
 
 
-
-//    @PutMapping("/{id}")
-//    public ResponseEntity<Employe> updateEmploye(
-//            @PathVariable int id,
-//            @RequestBody Employe updatedEmploye) {
-//
-//        try {
-//            Employe existing = employeService.findById(id)
-//                    .orElseThrow(() -> new RuntimeException("Employé non trouvé"));
-//
-//            // Met à jour même si c'est null (pour supprimer)
-//            existing.setIp(updatedEmploye.getIp());
-//            existing.setTelephone(updatedEmploye.getTelephone());
-//
-//            if (updatedEmploye.getPassword() != null) {
-//                existing.setPassword(employeService.encodePassword(updatedEmploye.getPassword()));
-//            }
-//
-//            Employe saved = employeService.save(existing);
-//            return ResponseEntity.ok(saved);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return ResponseEntity.status(500).build();
-//        }
-//    }
-
     @PutMapping("/{id}")
     public ResponseEntity<?> updateEmploye(
             @PathVariable int id,

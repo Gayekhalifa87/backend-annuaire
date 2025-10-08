@@ -1,3 +1,4 @@
+// ===== AgentApiDto.java =====
 package com.annuaire.khalifa.annuaire.external;
 
 import lombok.Getter;
@@ -18,8 +19,9 @@ public class AgentApiDto {
     private DirectionDto direction;
     private FonctionDto fonction;
     private RattachementDto rattachement;
+    private ChefDto chef; // ✅ Chef hiérarchique
+    private Boolean active;
 
-    // Classe interne pour Direction
     @Getter
     @Setter
     @AllArgsConstructor
@@ -31,7 +33,6 @@ public class AgentApiDto {
         private String code;
     }
 
-    // Classe interne pour Fonction
     @Getter
     @Setter
     @AllArgsConstructor
@@ -43,7 +44,6 @@ public class AgentApiDto {
         private String code;
     }
 
-    // Classe interne pour Rattachement (SERVICE)
     @Getter
     @Setter
     @AllArgsConstructor
@@ -53,5 +53,22 @@ public class AgentApiDto {
         private Boolean active;
         private String code;
         private String name;
+    }
+
+    // ✅ Chef avec possibilité de hiérarchie récursive
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ChefDto {
+        private Long id;
+        private Integer matricule;
+        private String fullName;
+        private String email;
+        private String telephone;
+        private Boolean active;
+        private FonctionDto fonction;
+        private DirectionDto direction;
+        private ChefDto chef; // ✅ Chef du chef (récursif)
     }
 }

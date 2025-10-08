@@ -20,4 +20,5 @@ public class CombinedEmployeDTO {
     private String direction;
     private String service;
     private String poste;
+    private String chef;
 }

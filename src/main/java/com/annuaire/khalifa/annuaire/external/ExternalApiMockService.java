@@ -1,70 +1,4 @@
-//// REMPLACER complètement le contenu de votre fichier ExternalApiMockService.java existant
-//
-//package com.annuaire.khalifa.annuaire.external;
-//
-//import lombok.RequiredArgsConstructor;
-//import org.springframework.stereotype.Service;
-//import org.springframework.web.bind.annotation.CrossOrigin;
-//
-//@Service
-//@RequiredArgsConstructor
-//public class ExternalApiMockService {
-//
-//    private final AgentApiClient agentApiClient;
-//
-//    public ExternalEmployeDTO getExternalEmploye(int externalId) {
-//        try {
-//            // Appel à la vraie API via Feign
-//            AgentApiDto agent = agentApiClient.getAgentById((long) externalId);
-//            return mapToExternalEmployeDTO(agent);
-//        } catch (Exception e) {
-//            // En cas d'erreur, on peut retourner un mock ou null
-//            System.err.println("Erreur API externe pour l'agent " + externalId + ": " + e.getMessage());
-//
-//            // Option 1 : Retourner null
-//            return null;
-//
-//
-//        }
-//    }
-//
-//    // Méthode utilitaire pour convertir AgentApiDto vers ExternalEmployeDTO
-//    private ExternalEmployeDTO mapToExternalEmployeDTO(AgentApiDto agent) {
-//        if (agent == null) return null;
-//
-//        ExternalEmployeDTO dto = new ExternalEmployeDTO();
-//        dto.setId(agent.getId().intValue());
-//
-//
-//        // Séparer le fullName en nom et prénom
-//        if (agent.getFullName() != null && !agent.getFullName().trim().isEmpty()) {
-//            String[] nameParts = agent.getFullName().trim().split("\\s+", 2);
-//            if (nameParts.length >= 2) {
-//                dto.setPrenom(nameParts[0]);
-//                dto.setNom(nameParts[1]);
-//            } else if (nameParts.length == 1) {
-//                dto.setPrenom(nameParts[0]);
-//                dto.setNom("");
-//            }
-//        }
-//
-//        dto.setEmail(agent.getEmail());
-//
-//        // Direction
-//        if (agent.getDirection() != null && agent.getDirection().getNom() != null) {
-//            dto.setDirection(agent.getDirection().getNom());
-//        }
-//
-//        // Service et Poste depuis la fonction
-//        if (agent.getFonction() != null && agent.getFonction().getNom() != null) {
-//            dto.setService(agent.getFonction().getNom());
-//            dto.setPoste(agent.getFonction().getNom());
-//        }
-//
-//        return dto;
-//    }
-//}
-
+// ===== ExternalApiMockService.java =====
 package com.annuaire.khalifa.annuaire.external;
 
 import lombok.RequiredArgsConstructor;
@@ -96,12 +30,9 @@ public class ExternalApiMockService {
         ExternalEmployeDTO dto = new ExternalEmployeDTO();
         dto.setId(agent.getId().intValue());
 
-        // 1. Matricule - conversion Integer vers String
+        // 1. Matricule
         if (agent.getMatricule() != null) {
             dto.setMatricule(String.valueOf(agent.getMatricule()));
-            System.out.println("✅ Matricule: " + dto.getMatricule());
-        } else {
-            System.out.println("⚠️ Matricule null pour agent " + agent.getId());
         }
 
         // 2. Email
@@ -117,33 +48,57 @@ public class ExternalApiMockService {
                 dto.setPrenom(nameParts[0]);
                 dto.setNom("");
             }
-            System.out.println("✅ Nom: " + dto.getNom() + ", Prénom: " + dto.getPrenom());
         }
 
-        // 4. Direction depuis direction.name
+        // 4. Direction
         if (agent.getDirection() != null && agent.getDirection().getName() != null) {
             dto.setDirection(agent.getDirection().getName());
-            System.out.println("✅ Direction: " + dto.getDirection());
-        } else {
-            System.out.println("⚠️ Direction null pour agent " + agent.getId());
         }
 
-        // 5. Service depuis rattachement.name
+        // 5. Service
         if (agent.getRattachement() != null && agent.getRattachement().getName() != null) {
             dto.setService(agent.getRattachement().getName());
-            System.out.println("✅ Service: " + dto.getService());
-        } else {
-            System.out.println("⚠️ Service (rattachement) null pour agent " + agent.getId());
         }
 
-        // 6. Poste depuis fonction.name
+        // 6. Poste
         if (agent.getFonction() != null && agent.getFonction().getName() != null) {
             dto.setPoste(agent.getFonction().getName());
-            System.out.println("✅ Poste: " + dto.getPoste());
-        } else {
-            System.out.println("⚠️ Poste (fonction) null pour agent " + agent.getId());
+        }
+
+        // 7. ✅ Hiérarchie complète (récursive)
+        if (agent.getChef() != null) {
+            dto.setChef(mapChefInfo(agent.getChef()));
         }
 
         return dto;
+    }
+
+    // ✅ Méthode récursive pour mapper toute la hiérarchie
+    private ExternalEmployeDTO.ChefInfo mapChefInfo(AgentApiDto.ChefDto chef) {
+        if (chef == null) return null;
+
+        ExternalEmployeDTO.ChefInfo chefInfo = new ExternalEmployeDTO.ChefInfo();
+        chefInfo.setId(chef.getId());
+        chefInfo.setMatricule(chef.getMatricule());
+        chefInfo.setFullName(chef.getFullName());
+        chefInfo.setEmail(chef.getEmail());
+
+        // Fonction du chef
+        if (chef.getFonction() != null && chef.getFonction().getName() != null) {
+            chefInfo.setFonction(chef.getFonction().getName());
+        }
+
+        // Direction du chef
+        if (chef.getDirection() != null && chef.getDirection().getName() != null) {
+            chefInfo.setDirection(chef.getDirection().getName());
+        }
+
+        // ✅ Récursion : chef du chef
+        if (chef.getChef() != null) {
+            chefInfo.setChef(mapChefInfo(chef.getChef()));
+            System.out.println("✅ Hiérarchie : " + chef.getFullName() + " -> " + chef.getChef().getFullName());
+        }
+
+        return chefInfo;
     }
 }
